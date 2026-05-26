@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Botiquín Emocional</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #000080; --navy-light: #0000b3; --black: #0a0a0a;
+  --white: #fff; --gray-50: #f9f9f9; --gray-100: #f0f0f0;
+  --gray-200: #e0e0e0; --gray-400: #aaa; --gray-600: #666; --gray-800: #333;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --radius: 12px; --radius-sm: 6px;
+}
+body { font-family: var(--font-body); background: var(--black); color: var(--white); min-height: 100vh; overflow-x: hidden; }
+body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.5; }
+.screen { display:none; min-height:100vh; position:relative; z-index:1; }
+.screen.active { display:flex; flex-direction:column; }
+#home { align-items:center; justify-content:center; padding:3rem 2rem; background:linear-gradient(160deg,#0a0a0a 0%,#0d0d1a 50%,#0a0a0a 100%); }
+.home-inner { max-width:700px; width:100%; text-align:center; }
+.home-badge { display:inline-block; background:rgba(0,0,128,.15); border:1px solid rgba(0,0,128,.4); color:#6699ff; font-size:11px; letter-spacing:.18em; text-transform:uppercase; padding:6px 18px; border-radius:100px; margin-bottom:2.5rem; animation:fadeUp .8s ease both; }
+.home-title { font-family:var(--font-display); font-size:clamp(3rem,8vw,5.5rem); font-weight:700; line-height:1.05; letter-spacing:-.02em; margin-bottom:1.5rem; animation:fadeUp .8s ease .1s both; }
+.home-title em { font-style:normal; color:#6699ff; }
+.home-subtitle { font-size:1.1rem; color:var(--gray-400); font-weight:300; line-height:1.7; max-width:480px; margin:0 auto 3.5rem; animation:fadeUp .8s ease .2s both; }
+.home-options { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; animation:fadeUp .8s ease .3s both; }
+.option-card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:2.5rem 2rem; cursor:pointer; transition:all .25s ease; text-align:left; position:relative; overflow:hidden; }
+.option-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,0,128,.08),transparent); opacity:0; transition:opacity .25s; }
+.option-card:hover { border-color:rgba(0,0,128,.5); transform:translateY(-3px); background:rgba(0,0,128,.08); }
+.option-card:hover::before { opacity:1; }
+.option-icon { width:48px; height:48px; background:rgba(0,0,128,.2); border:1px solid rgba(0,0,128,.4); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:1.25rem; }
+.option-label { font-size:.7rem; letter-spacing:.15em; text-transform:uppercase; color:#6699ff; margin-bottom:.5rem; font-weight:500; }
+.option-title { font-family:var(--font-display); font-size:1.4rem; font-weight:500; margin-bottom:.6rem; }
+.option-desc { font-size:.875rem; color:var(--gray-400); line-height:1.6; }
+.home-footer { margin-top:3rem; font-size:.8rem; color:var(--gray-600); animation:fadeUp .8s ease .4s both; }
+#form-screen { background:var(--gray-50); color:var(--black); }
+.form-header { background:var(--black); padding:1.25rem 2rem; display:flex; align-items:center; gap:1rem; border-bottom:1px solid rgba(255,255,255,.06); }
+.back-btn { background:none; border:1px solid rgba(255,255,255,.15); color:var(--white); padding:6px 14px; border-radius:100px; cursor:pointer; font-size:.8rem; font-family:var(--font-body); transition:all .2s; }
+.back-btn:hover { background:rgba(255,255,255,.08); }
+.form-header-title { font-family:var(--font-display); font-size:1rem; color:var(--white); font-weight:500; }
+.form-body { flex:1; display:flex; align-items:flex-start; justify-content:center; padding:3rem 1.5rem; }
+.form-card { background:var(--white); border-radius:16px; box-shadow:0 4px 40px rgba(0,0,0,.1); max-width:680px; width:100%; overflow:hidden; }
+.form-card-header { background:var(--navy); padding:2.5rem 2.5rem 2rem; color:var(--white); }
+.form-card-header p { font-size:.85rem; opacity:.7; margin-top:.5rem; line-height:1.5; }
+.form-card-header h2 { font-family:var(--font-display); font-size:1.8rem; font-weight:500; }
+.form-fields { padding:2.5rem; display:flex; flex-direction:column; gap:2rem; }
+.field-group { display:flex; flex-direction:column; gap:.5rem; }
+.field-label { font-size:.85rem; font-weight:500; color:var(--gray-800); }
+.required { color:#c00; }
+.field-input { border:1.5px solid var(--gray-200); border-radius:var(--radius-sm); padding:12px 14px; font-family:var(--font-body); font-size:.95rem; color:var(--black); background:var(--white); transition:border-color .2s; outline:none; width:100%; }
+.field-input:focus { border-color:var(--navy); }
+textarea.field-input { min-height:120px; resize:vertical; }
+.field-divider { border:none; border-top:1px solid var(--gray-100); margin:0; }
+.emoji-options { display:flex; gap:.75rem; flex-wrap:wrap; }
+.emoji-option { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 16px; border:2px solid var(--gray-200); border-radius:var(--radius); cursor:pointer; transition:all .2s; background:var(--white); flex:1; min-width:70px; }
+.emoji-option:hover { border-color:var(--navy); background:rgba(0,0,128,.04); }
+.emoji-option.selected { border-color:var(--navy); background:rgba(0,0,128,.08); }
+.emoji-option .emoji-face { font-size:1.8rem; }
+.emoji-option .emoji-label { font-size:.65rem; color:var(--gray-600); text-align:center; }
+.severity-track { display:flex; gap:8px; }
+.sev-btn { flex:1; height:44px; border:2px solid var(--gray-200); background:var(--white); border-radius:var(--radius-sm); cursor:pointer; font-size:.95rem; font-weight:500; color:var(--gray-600); transition:all .2s; font-family:var(--font-body); }
+.sev-btn:hover { border-color:var(--navy); color:var(--navy); }
+.sev-btn.selected { background:var(--navy); border-color:var(--navy); color:var(--white); }
+.severity-labels { display:flex; justify-content:space-between; font-size:.7rem; color:var(--gray-400); margin-top:6px; }
+.checkbox-options { display:flex; flex-direction:column; gap:.5rem; }
+.checkbox-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid var(--gray-200); border-radius:var(--radius-sm); cursor:pointer; transition:all .2s; }
+.checkbox-item:hover { border-color:var(--navy); background:rgba(0,0,128,.03); }
+.checkbox-item input[type="checkbox"] { width:18px; height:18px; accent-color:var(--navy); cursor:pointer; }
+.checkbox-item label { cursor:pointer; font-size:.9rem; color:var(--gray-800); }
+.submit-btn { background:var(--navy); color:var(--white); border:none; padding:14px 32px; border-radius:100px; font-family:var(--font-body); font-size:1rem; font-weight:500; cursor:pointer; transition:all .25s; width:100%; letter-spacing:.02em; }
+.submit-btn:hover { background:var(--navy-light); transform:translateY(-1px); }
+.submit-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+#thanks-screen { background:var(--black); align-items:center; justify-content:center; text-align:center; padding:3rem 2rem; }
+.thanks-inner { max-width:500px; }
+.thanks-face { font-size:7rem; line-height:1; margin-bottom:1.5rem; animation:bounceIn .7s cubic-bezier(.34,1.56,.64,1) both; display:block; }
+.thanks-title { font-family:var(--font-display); font-size:clamp(2rem,6vw,3rem); font-weight:700; margin-bottom:1rem; animation:fadeUp .6s ease .3s both; }
+.thanks-subtitle { color:var(--gray-400); font-size:1.05rem; line-height:1.7; animation:fadeUp .6s ease .4s both; margin-bottom:2.5rem; }
+.thanks-actions { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; animation:fadeUp .6s ease .5s both; }
+.btn-primary { background:var(--navy); color:var(--white); border:none; padding:13px 28px; border-radius:100px; font-family:var(--font-body); font-size:.95rem; font-weight:500; cursor:pointer; transition:all .25s; }
+.btn-primary:hover { background:var(--navy-light); transform:translateY(-2px); }
+.btn-ghost { background:transparent; color:var(--gray-400); border:1px solid rgba(255,255,255,.15); padding:13px 28px; border-radius:100px; font-family:var(--font-body); font-size:.95rem; cursor:pointer; transition:all .25s; }
+.btn-ghost:hover { color:var(--white); border-color:rgba(255,255,255,.4); }
+.particle { position:absolute; width:8px; height:8px; border-radius:50%; animation:particleFly 1.2s ease-out forwards; pointer-events:none; }
+#forum-screen { background:#0a0a0a; }
+.forum-header { background:var(--black); padding:1.25rem 2rem; display:flex; align-items:center; gap:1rem; border-bottom:1px solid rgba(255,255,255,.06); position:sticky; top:0; z-index:10; }
+.forum-header-title { font-family:var(--font-display); font-size:1rem; color:var(--white); }
+.forum-counter { margin-left:auto; font-size:.75rem; color:var(--gray-600); background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); padding:4px 12px; border-radius:100px; }
+.filter-bar { width:100%; max-width:760px; margin:0 auto; display:flex; flex-wrap:wrap; gap:.5rem; padding:.25rem 0; }
+.filter-chip { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); color:var(--gray-400); padding:6px 14px; border-radius:100px; font-size:.75rem; cursor:pointer; transition:all .2s; font-family:var(--font-body); white-space:nowrap; }
+.filter-chip:hover { border-color:rgba(0,0,128,.5); color:var(--white); }
+.filter-chip.active { background:rgba(0,0,128,.25); border-color:rgba(0,0,128,.7); color:#8aacff; }
+.forum-body { flex:1; display:flex; flex-direction:column; align-items:center; gap:1rem; padding:2rem; }
+.forum-intro { text-align:center; max-width:500px; margin-bottom:.5rem; }
+.forum-intro h2 { font-family:var(--font-display); font-size:1.5rem; margin-bottom:.5rem; }
+.forum-intro p { color:var(--gray-400); font-size:.9rem; line-height:1.6; }
+.empty-state { text-align:center; padding:4rem 2rem; color:var(--gray-600); }
+.empty-state .empty-icon { font-size:3rem; margin-bottom:1rem; }
+.empty-state p { font-size:.95rem; line-height:1.6; }
+.loading-state { text-align:center; padding:4rem 2rem; color:var(--gray-600); }
+.loading-spinner { width:32px; height:32px; border:3px solid rgba(255,255,255,.1); border-top-color:#6699ff; border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 1rem; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.case-card { width:100%; max-width:760px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:var(--radius); overflow:hidden; transition:border-color .25s; animation:fadeUp .4s ease both; }
+.case-card:hover { border-color:rgba(0,0,128,.35); }
+.case-main { display:grid; grid-template-columns:260px 1fr; }
+.case-left { background:var(--navy); padding:2rem 1.75rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden; }
+.case-left::after { content:''; position:absolute; bottom:-30px; right:-30px; width:120px; height:120px; border:2px solid rgba(255,255,255,.08); border-radius:50%; }
+.case-tag { font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:.5rem; }
+.case-user { font-family:var(--font-display); font-size:1.35rem; font-weight:500; color:var(--white); word-break:break-word; }
+.case-mood { display:flex; align-items:center; gap:8px; margin-top:1.5rem; }
+.case-mood-emoji { font-size:1.6rem; }
+.case-mood-label { font-size:.75rem; color:rgba(255,255,255,.6); }
+.case-sev { display:flex; gap:4px; margin-top:.75rem; }
+.sev-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); }
+.sev-dot.filled { background:rgba(255,255,255,.8); }
+.case-right { padding:1.75rem 1.75rem 1rem; display:flex; flex-direction:column; gap:.85rem; }
+.case-section-label { font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; color:var(--gray-600); margin-bottom:4px; }
+.case-experience { font-size:.95rem; color:rgba(255,255,255,.85); line-height:1.65; font-style:italic; }
+.case-seeks { display:flex; flex-wrap:wrap; gap:6px; }
+.seek-pill { font-size:.7rem; background:rgba(0,0,128,.2); border:1px solid rgba(0,0,128,.4); color:#8aacff; padding:4px 10px; border-radius:100px; }
+.case-date { font-size:.7rem; color:var(--gray-600); }
+.reactions-row { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; padding:0 1.75rem .5rem; }
+.reaction-btn { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:100px; padding:5px 12px; cursor:pointer; font-size:.85rem; display:flex; align-items:center; gap:5px; transition:all .2s; font-family:var(--font-body); color:var(--gray-400); white-space:nowrap; }
+.reaction-btn:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25); color:var(--white); transform:scale(1.06); }
+.reaction-btn.reacted { background:rgba(0,0,128,.2); border-color:rgba(0,0,128,.5); color:#8aacff; }
+.reaction-count { font-size:.75rem; font-weight:500; }
+.comments-section { border-top:1px solid rgba(255,255,255,.06); padding:0 1.75rem 1.5rem; }
+.comments-toggle { background:none; border:none; color:var(--gray-600); font-family:var(--font-body); font-size:.8rem; cursor:pointer; padding:.75rem 0; display:flex; align-items:center; gap:6px; transition:color .2s; width:100%; }
+.comments-toggle:hover { color:var(--gray-400); }
+.comments-toggle .toggle-arrow { transition:transform .25s; display:inline-block; }
+.comments-toggle.open .toggle-arrow { transform:rotate(90deg); }
+.comments-body { display:none; }
+.comments-body.open { display:block; }
+.comment-list { display:flex; flex-direction:column; gap:.75rem; margin-bottom:1rem; }
+.comment-item { background:rgba(255,255,255,.04); border-radius:var(--radius-sm); padding:.75rem 1rem; }
+.comment-author { font-size:.75rem; font-weight:500; color:#8aacff; margin-bottom:.3rem; }
+.comment-text { font-size:.85rem; color:rgba(255,255,255,.75); line-height:1.5; }
+.comment-time { font-size:.65rem; color:var(--gray-600); margin-top:.3rem; }
+.comment-input-row { display:flex; gap:.5rem; }
+.comment-input { flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); padding:9px 12px; color:var(--white); font-family:var(--font-body); font-size:.85rem; outline:none; transition:border-color .2s; }
+.comment-input::placeholder { color:var(--gray-600); }
+.comment-input:focus { border-color:rgba(0,0,128,.6); }
+.comment-send-btn { background:var(--navy); border:none; color:var(--white); padding:9px 16px; border-radius:var(--radius-sm); cursor:pointer; font-size:.85rem; font-family:var(--font-body); transition:background .2s; white-space:nowrap; }
+.comment-send-btn:hover { background:var(--navy-light); }
+.forum-footer { padding:2rem; display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes bounceIn { 0%{transform:scale(0) rotate(-10deg);opacity:0} 60%{transform:scale(1.15) rotate(3deg);opacity:1} 80%{transform:scale(.95) rotate(-2deg)} 100%{transform:scale(1) rotate(0)} }
+@keyframes particleFly { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
+@keyframes reactionPop { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 100%{transform:scale(1)} }
+.reaction-pop { animation:reactionPop .3s ease; }
+@media(max-width:600px){
+  .home-options{grid-template-columns:1fr}
+  .case-main{grid-template-columns:1fr}
+  .case-left{padding:1.5rem}
+  .emoji-options{gap:.4rem}
+  .emoji-option{padding:10px 8px;min-width:56px}
+}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home" class="screen active">
+  <div class="home-inner">
+    <span class="home-badge">Espacio de escucha y apoyo</span>
+    <h1 class="home-title">Botiquín<br><em>Emocional</em></h1>
+    <p class="home-subtitle">Un lugar donde tus experiencias importan. Comparte, conecta y encuentra apoyo en quienes también han vivido algo similar.</p>
+    <div class="home-options">
+      <div class="option-card" onclick="showScreen('form-screen')">
+        <div class="option-icon">📝</div>
+        <div class="option-label">Sección 01</div>
+        <div class="option-title">Registrar experiencia</div>
+        <div class="option-desc">Cuéntanos cómo te sientes y qué viviste. Tu historia puede ayudar a otros.</div>
+      </div>
+      <div class="option-card" onclick="openForum()">
+        <div class="option-icon">🌐</div>
+        <div class="option-label">Sección 02</div>
+        <div class="option-title">Foro de experiencias</div>
+        <div class="option-desc">Explora lo que otros han compartido. Reacciona, comenta y filtra por lo que buscas.</div>
+      </div>
+    </div>
+    <p class="home-footer">Lo que compartas es visible para la comunidad · Cuida tus palabras</p>
+  </div>
+</section>
+
+<!-- FORM -->
+<section id="form-screen" class="screen">
+  <div class="form-header">
+    <button class="back-btn" onclick="showScreen('home')">← Volver</button>
+    <span class="form-header-title">Botiquín Emocional — Registrar experiencia</span>
+  </div>
+  <div class="form-body">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h2>¿Qué harías si...?</h2>
+        <p>Cuéntanos tu experiencia. Tu nombre y respuestas podrán ser vistos por otros miembros de la comunidad para que sepan que no están solos.</p>
+      </div>
+      <div class="form-fields">
+        <div class="field-group">
+          <label class="field-label">Nombre o alias <span class="required">*</span></label>
+          <input id="f-name" class="field-input" type="text" placeholder="¿Cómo quieres que te llamen?" maxlength="50">
+        </div>
+        <hr class="field-divider">
+        <div class="field-group">
+          <label class="field-label">Mi experiencia <span class="required">*</span></label>
+          <textarea id="f-experience" class="field-input" placeholder="Cuéntanos qué pasó. Puedes ser tan específico o general como quieras..." maxlength="600"></textarea>
+          <span style="font-size:.75rem;color:var(--gray-400)" id="char-count">0 / 600 caracteres</span>
+        </div>
+        <hr class="field-divider">
+        <div class="field-group">
+          <label class="field-label">¿Cómo te sientes al respecto? <span class="required">*</span></label>
+          <div class="emoji-options">
+            <div class="emoji-option" data-mood="Muy feliz" onclick="selectMood(this)"><span class="emoji-face">😄</span><span class="emoji-label">Muy feliz</span></div>
+            <div class="emoji-option" data-mood="Alegre" onclick="selectMood(this)"><span class="emoji-face">🙂</span><span class="emoji-label">Alegre</span></div>
+            <div class="emoji-option" data-mood="Neutral" onclick="selectMood(this)"><span class="emoji-face">😐</span><span class="emoji-label">Neutral</span></div>
+            <div class="emoji-option" data-mood="Triste" onclick="selectMood(this)"><span class="emoji-face">😢</span><span class="emoji-label">Triste</span></div>
+            <div class="emoji-option" data-mood="Muy triste" onclick="selectMood(this)"><span class="emoji-face">😭</span><span class="emoji-label">Muy triste</span></div>
+          </div>
+        </div>
+        <hr class="field-divider">
+        <div class="field-group">
+          <label class="field-label">Gravedad del asunto <span class="required">*</span></label>
+          <div class="severity-track">
+            <button class="sev-btn" data-sev="1" onclick="selectSev(this)">1</button>
+            <button class="sev-btn" data-sev="2" onclick="selectSev(this)">2</button>
+            <button class="sev-btn" data-sev="3" onclick="selectSev(this)">3</button>
+            <button class="sev-btn" data-sev="4" onclick="selectSev(this)">4</button>
+            <button class="sev-btn" data-sev="5" onclick="selectSev(this)">5</button>
+          </div>
+          <div class="severity-labels"><span>Leve</span><span>Moderado</span><span>Muy grave</span></div>
+        </div>
+        <hr class="field-divider">
+        <div class="field-group">
+          <label class="field-label">¿Qué buscas con esto? <span class="required">*</span></label>
+          <div class="checkbox-options">
+            <div class="checkbox-item"><input type="checkbox" id="s1" value="Desahogarme"><label for="s1">💬 Desahogarme</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="s2" value="Consejos"><label for="s2">💡 Recibir consejos o perspectivas</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="s3" value="Escucha"><label for="s3">👂 Sentirme escuchado/a</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="s4" value="Compañía"><label for="s4">🤝 Compañía emocional</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="s5" value="Experiencias similares"><label for="s5">🔍 Conocer experiencias similares</label></div>
+          </div>
+        </div>
+        <hr class="field-divider">
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:1rem;font-size:.78rem;color:var(--gray-600);line-height:1.5;">
+          ⚠️ Tu nombre y experiencia serán visibles para otros usuarios de la comunidad. Nunca compartas información personal sensible. Los comentarios irrespetuosos serán eliminados.
+        </div>
+        <button class="submit-btn" id="submit-btn" onclick="submitForm()">Entregar mi experiencia</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THANKS -->
+<section id="thanks-screen" class="screen" style="position:relative;">
+  <div class="thanks-inner">
+    <span class="thanks-face">😊</span>
+    <h1 class="thanks-title">Gracias por contarnos tu experiencia</h1>
+    <p class="thanks-subtitle">Tu historia ya es parte de nuestra comunidad. Esperamos que este espacio te haya traído un poco de alivio. Recuerda: no estás solo/a.</p>
+    <div class="thanks-actions">
+      <button class="btn-primary" onclick="openForum()">Ver el foro</button>
+      <button class="btn-ghost" onclick="showScreen('home')">Volver al inicio</button>
+    </div>
+  </div>
+</section>
+
+<!-- FORUM -->
+<section id="forum-screen" class="screen">
+  <div class="forum-header">
+    <button class="back-btn" onclick="showScreen('home')">← Volver</button>
+    <span class="forum-header-title">Foro de Experiencias</span>
+    <div class="forum-counter" id="forum-counter">Cargando...</div>
+  </div>
+  <div class="forum-body">
+    <div class="forum-intro">
+      <h2>Experiencias de la comunidad</h2>
+      <p>Reacciona, comenta y filtra por lo que buscas. Aquí nadie está solo/a.</p>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-chip active" data-filter="Todos" onclick="setFilter(this)">🔎 Todos</button>
+      <button class="filter-chip" data-filter="Desahogarme" onclick="setFilter(this)">💬 Desahogarme</button>
+      <button class="filter-chip" data-filter="Consejos" onclick="setFilter(this)">💡 Consejos</button>
+      <button class="filter-chip" data-filter="Escucha" onclick="setFilter(this)">👂 Escucha</button>
+      <button class="filter-chip" data-filter="Compañía" onclick="setFilter(this)">🤝 Compañía</button>
+      <button class="filter-chip" data-filter="Experiencias similares" onclick="setFilter(this)">🔍 Similares</button>
+    </div>
+    <div id="forum-list" style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:1rem;">
+      <div class="loading-state" id="loading-state">
+        <div class="loading-spinner"></div>
+        <p>Cargando experiencias...</p>
+      </div>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="empty-icon">🌱</div>
+        <p>Aún no hay experiencias registradas.<br>¡Sé el primero en compartir la tuya!</p>
+      </div>
+    </div>
+  </div>
+  <div class="forum-footer">
+    <button class="btn-primary" onclick="showScreen('form-screen')">+ Registrar mi experiencia</button>
+    <button class="btn-ghost" onclick="showScreen('home')">Salir</button>
+  </div>
+</section>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getFirestore, collection, addDoc, doc,
+  updateDoc, onSnapshot, query, orderBy,
+  arrayUnion, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA9945Vsa2J8WDvLL_Kys7_29sIk_TeiKI",
+  authDomain: "botiquin-emocional.firebaseapp.com",
+  projectId: "botiquin-emocional",
+  storageBucket: "botiquin-emocional.firebasestorage.app",
+  messagingSenderId: "1077913762779",
+  appId: "1:1077913762779:web:37eb51cab0df356c6505fe",
+  measurementId: "G-7VNKJQT2KE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const MOOD_EMOJIS = { 'Muy feliz':'😄','Alegre':'🙂','Neutral':'😐','Triste':'😢','Muy triste':'😭' };
+const REACTION_EMOJIS = ['❤️','🤗','💪','😢','🙏'];
+const REACTION_LABELS = ['Me conmueve','Te acompaño','Ánimo','Lo siento','Gracias'];
+
+let selectedMood = null, selectedSev = null, activeFilter = 'Todos';
+const myReactions = {};
+let lastEntries = [];
+let unsubscribe = null;
+
+window.showScreen = function(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'forum-screen') listenForum();
+};
+window.openForum = function() { window.showScreen('forum-screen'); };
+
+document.getElementById('f-experience').addEventListener('input', function() {
+  document.getElementById('char-count').textContent = this.value.length + ' / 600 caracteres';
+});
+
+window.selectMood = function(el) {
+  document.querySelectorAll('.emoji-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected'); selectedMood = el.dataset.mood;
+};
+window.selectSev = function(el) {
+  document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected'); selectedSev = parseInt(el.dataset.sev);
+};
+function getSelectedSeeks() {
+  return Array.from(document.querySelectorAll('.checkbox-options input:checked')).map(i => i.value);
+}
+
+window.submitForm = async function() {
+  const name = document.getElementById('f-name').value.trim();
+  const experience = document.getElementById('f-experience').value.trim();
+  const seeks = getSelectedSeeks();
+  if (!name) return alert('Por favor ingresa tu nombre o alias.');
+  if (!experience) return alert('Por favor cuéntanos tu experiencia.');
+  if (!selectedMood) return alert('Por favor selecciona cómo te sientes.');
+  if (!selectedSev) return alert('Por favor indica la gravedad del asunto.');
+  if (!seeks.length) return alert('Por favor selecciona al menos una opción de lo que buscas.');
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    await addDoc(collection(db, 'experiences'), {
+      name, experience,
+      mood: selectedMood,
+      severity: selectedSev,
+      seeks,
+      reactions: { '❤️':0,'🤗':0,'💪':0,'😢':0,'🙏':0 },
+      comments: [],
+      date: new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' }),
+      createdAt: serverTimestamp()
+    });
+
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-experience').value = '';
+    document.getElementById('char-count').textContent = '0 / 600 caracteres';
+    document.querySelectorAll('.emoji-option,.sev-btn').forEach(e => e.classList.remove('selected'));
+    document.querySelectorAll('.checkbox-options input').forEach(i => i.checked = false);
+    selectedMood = null; selectedSev = null;
+
+    window.showScreen('thanks-screen');
+    launchParticles();
+  } catch(e) {
+    alert('Hubo un error al guardar. Intenta de nuevo.');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entregar mi experiencia';
+  }
+};
+
+function launchParticles() {
+  const colors = ['#6699ff','#fff','#a0c0ff','#ffcc88','#88ffcc'];
+  const c = document.getElementById('thanks-screen');
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `left:${40+Math.random()*20}%;top:${30+Math.random()*20}%;background:${colors[Math.floor(Math.random()*colors.length)]};--dx:${(Math.random()-.5)*300}px;--dy:${(Math.random()-.5)*300-80}px;animation-delay:${Math.random()*.3}s;animation-duration:${.8+Math.random()*.6}s;`;
+    c.appendChild(p);
+    setTimeout(() => p.remove(), 1500);
+  }
+}
+
+window.setFilter = function(el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = el.dataset.filter;
+  renderForum(lastEntries);
+};
+
+function listenForum() {
+  if (unsubscribe) return;
+  const q = query(collection(db, 'experiences'), orderBy('createdAt', 'desc'));
+  unsubscribe = onSnapshot(q, (snapshot) => {
+    lastEntries = snapshot.docs.map(d => ({ _id: d.id, ...d.data() }));
+    renderForum(lastEntries);
+  });
+}
+
+function renderForum(allEntries) {
+  const list = activeFilter === 'Todos'
+    ? allEntries
+    : allEntries.filter(e => (e.seeks || []).includes(activeFilter));
+
+  const container = document.getElementById('forum-list');
+  const loading = document.getElementById('loading-state');
+  const empty = document.getElementById('empty-state');
+  const counter = document.getElementById('forum-counter');
+
+  Array.from(container.querySelectorAll('.case-card')).forEach(c => c.remove());
+  loading.style.display = 'none';
+
+  const total = allEntries.length;
+  counter.textContent = total + (total === 1 ? ' experiencia' : ' experiencias');
+
+  if (list.length === 0) {
+    empty.style.display = 'block';
+    empty.querySelector('p').innerHTML = activeFilter === 'Todos'
+      ? 'Aún no hay experiencias registradas.<br>¡Sé el primero en compartir la tuya!'
+      : `No hay experiencias con el filtro <strong>"${activeFilter}"</strong> aún.`;
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.forEach((entry, idx) => {
+    const id = entry._id;
+    const dots = Array.from({length:5},(_,i)=>`<div class="sev-dot ${i<entry.severity?'filled':''}"></div>`).join('');
+    const pills = (entry.seeks||[]).map(s=>`<span class="seek-pill">${s}</span>`).join('');
+    const counts = entry.reactions || { '❤️':0,'🤗':0,'💪':0,'😢':0,'🙏':0 };
+    const reacted = myReactions[id] || {};
+
+    const reactionsHtml = REACTION_EMOJIS.map((emoji, ri) => {
+      const isReacted = reacted[emoji] ? 'reacted' : '';
+      return `<button class="reaction-btn ${isReacted}" data-id="${id}" data-emoji="${emoji}" title="${REACTION_LABELS[ri]}">
+        ${emoji} <span class="reaction-count">${counts[emoji]||0}</span>
+      </button>`;
+    }).join('');
+
+    const comments = entry.comments || [];
+    const commentCount = comments.length;
+
+    const card = document.createElement('div');
+    card.className = 'case-card';
+    card.dataset.id = id;
+    card.style.animationDelay = (idx * 0.06) + 's';
+    card.innerHTML = `
+      <div class="case-main">
+        <div class="case-left">
+          <div>
+            <div class="case-tag">Comparte su experiencia</div>
+            <div class="case-user">${escHtml(entry.name)}</div>
+          </div>
+          <div>
+            <div class="case-mood">
+              <span class="case-mood-emoji">${MOOD_EMOJIS[entry.mood]||'😐'}</span>
+              <span class="case-mood-label">${escHtml(entry.mood)}</span>
+            </div>
+            <div class="case-sev">${dots}</div>
+            <div style="font-size:.65rem;color:rgba(255,255,255,.35);margin-top:4px;">Gravedad ${entry.severity}/5</div>
+          </div>
+        </div>
+        <div class="case-right">
+          <div>
+            <div class="case-section-label">Experiencia</div>
+            <p class="case-experience">"${escHtml(entry.experience)}"</p>
+          </div>
+          ${pills ? `<div><div class="case-section-label">Busca</div><div class="case-seeks">${pills}</div></div>` : ''}
+          <div class="case-date">${entry.date}</div>
+        </div>
+      </div>
+      <div class="reactions-row">${reactionsHtml}</div>
+      <div class="comments-section">
+        <button class="comments-toggle" id="ct-${id}" onclick="toggleComments('${id}')">
+          <span class="toggle-arrow">▶</span> ${commentCount===0?'Comentar':commentCount+(commentCount===1?' comentario':' comentarios')}
+        </button>
+        <div class="comments-body" id="cb-${id}">
+          <div class="comment-list" id="clist-${id}">
+            ${comments.map(c => `
+              <div class="comment-item">
+                <div class="comment-author">${escHtml(c.author)}</div>
+                <div class="comment-text">${escHtml(c.text)}</div>
+                <div class="comment-time">${c.time}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="comment-input-row">
+            <input class="comment-input" id="cin-name-${id}" type="text" placeholder="Tu nombre (opcional)" maxlength="30" style="max-width:160px;">
+            <input class="comment-input" id="cin-text-${id}" type="text" placeholder="Escribe un comentario..." maxlength="300"
+              onkeydown="if(event.key==='Enter')sendComment('${id}')">
+            <button class="comment-send-btn" onclick="sendComment('${id}')">Enviar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+
+    card.querySelectorAll('.reaction-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleReaction(btn.dataset.id, btn.dataset.emoji, btn));
+    });
+  });
+}
+
+async function handleReaction(entryId, emoji, btnEl) {
+  if (!myReactions[entryId]) myReactions[entryId] = {};
+  const already = myReactions[entryId][emoji];
+  const delta = already ? -1 : 1;
+  const countEl = btnEl.querySelector('.reaction-count');
+  const current = parseInt(countEl.textContent) || 0;
+  countEl.textContent = Math.max(0, current + delta);
+  if (already) {
+    delete myReactions[entryId][emoji];
+    btnEl.classList.remove('reacted');
+  } else {
+    myReactions[entryId][emoji] = true;
+    btnEl.classList.add('reacted');
+    btnEl.classList.add('reaction-pop');
+    setTimeout(() => btnEl.classList.remove('reaction-pop'), 350);
+  }
+  try {
+    const ref = doc(db, 'experiences', entryId);
+    await updateDoc(ref, { [`reactions.${emoji}`]: Math.max(0, current + delta) });
+  } catch(e) { console.error('Error al guardar reacción:', e); }
+}
+
+window.toggleComments = function(id) {
+  const body = document.getElementById('cb-' + id);
+  const toggle = document.getElementById('ct-' + id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+};
+
+window.sendComment = async function(entryId) {
+  const nameEl = document.getElementById('cin-name-' + entryId);
+  const textEl = document.getElementById('cin-text-' + entryId);
+  const name = nameEl.value.trim();
+  const text = textEl.value.trim();
+  if (!text) return;
+
+  const comment = {
+    author: name || 'Anónimo',
+    text,
+    time: new Date().toLocaleTimeString('es-PE', { hour:'2-digit', minute:'2-digit' }) + ' · ' +
+          new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'short' })
+  };
+
+  textEl.value = '';
+  nameEl.value = '';
+
+  const list = document.getElementById('clist-' + entryId);
+  if (list) {
+    const item = document.createElement('div');
+    item.className = 'comment-item';
+    item.innerHTML = `
+      <div class="comment-author">${escHtml(comment.author)}</div>
+      <div class="comment-text">${escHtml(comment.text)}</div>
+      <div class="comment-time">${comment.time}</div>
+    `;
+    list.appendChild(item);
+  }
+
+  try {
+    const ref = doc(db, 'experiences', entryId);
+    await updateDoc(ref, { comments: arrayUnion(comment) });
+  } catch(e) { console.error('Error al guardar comentario:', e); }
+};
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
